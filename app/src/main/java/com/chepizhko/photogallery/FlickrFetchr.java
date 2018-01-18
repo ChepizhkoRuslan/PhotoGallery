@@ -3,11 +3,17 @@ package com.chepizhko.photogallery;
 import android.net.Uri;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FlickrFetchr {
     private static final String TAG = "FlickrFetcher";
@@ -46,7 +52,8 @@ public class FlickrFetchr {
         return new String(getUrlBytes(urlSpec));
     }
     // Метод, который строит соответствующий URL-адрес запроса и загружает его содержимое
-    public void fetchItems() {
+    public List<GalleryItem> fetchItems() {
+        List<GalleryItem> items = new ArrayList<>();
         try {
             // класс Uri.Builder для построения полного URL-адреса для API-запроса к Flickr.
             // Uri.Builder — вспомогательный класс для создания параметризованных URL-адресов
@@ -62,10 +69,38 @@ public class FlickrFetchr {
                     // Значение url_s приказывает Flickr включить URL-адрес для уменьшенной версии изображения, если оно доступно
                     .appendQueryParameter("extras", "url_s")
                     .build().toString();
+            // получаем JSON из запроса по URL-адресу
             String jsonString = getUrlString(url);
             Log.i(TAG, "Received JSON: " + jsonString);
+            // Тексты JSON легко разбираются в соответствующие объекты Java при помощи конструктора JSONObject(String)
+            // и строит иерархию объектов, соответствующую исходному тексту JSON
+            JSONObject jsonBody = new JSONObject(jsonString);
+            // метод вызывает parseItems(…) и возвращает List с объектами GalleryItem
+            parseItems(items, jsonBody);
         } catch (IOException ioe) {
             Log.e(TAG, "Failed to fetch items", ioe);
+        } catch (JSONException je){
+            Log.e(TAG, "Failed to parse JSON", je);
+        }
+        return items;
+    }
+    // метод для извлечения информации каждой фотографии и добавления её в список.
+    // Создайте для каждой фотографии объект GalleryItem и добавьте его в список
+    private void parseItems(List<GalleryItem> items, JSONObject jsonBody) throws IOException, JSONException {
+        JSONObject photosJsonObject = jsonBody.getJSONObject("photos");
+        JSONArray photoJsonArray = photosJsonObject.getJSONArray("photo");
+        for (int i = 0; i < photoJsonArray.length(); i++) {
+            JSONObject photoJsonObject = photoJsonArray.getJSONObject(i);
+            GalleryItem item = new GalleryItem();
+            item.setId(photoJsonObject.getString("id"));
+            item.setCaption(photoJsonObject.getString("title"));
+            // Flickr не всегда возвращает компонент url_s для каждого изображения.
+            // Добавьте проверку для игнорирования изображений, не имеющих URL-адреса изображения
+            if (!photoJsonObject.has("url_s")) {
+                continue;
+            }
+            item.setUrl(photoJsonObject.getString("url_s"));
+            items.add(item);
         }
     }
 }
