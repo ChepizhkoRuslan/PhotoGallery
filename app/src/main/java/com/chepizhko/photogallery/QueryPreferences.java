@@ -6,6 +6,8 @@ import android.preference.PreferenceManager;
 public class QueryPreferences {
     // Значение PREF_SEARCH_QUERY используется в качестве ключа для хранения запроса.
     private static final String PREF_SEARCH_QUERY = "searchQuery";
+    // Константа для хранения идентификатора последней загруженной фотографии
+    private static final String PREF_LAST_RESULT_ID = "lastResultId";
     // Метод getStoredQuery(Context) возвращает значение запроса
     // класс QueryPreferences не имеет собственного контекста,
     // вызывающий компонент должен передать свой контекст как входной параметр
@@ -23,6 +25,17 @@ public class QueryPreferences {
                 .putString(PREF_SEARCH_QUERY, query)
                 // Метод apply() вносит изменения в память немедленно,
                 // а непосредственная запись в файл осуществляется в фоновом потоке
+                .apply();
+    }
+
+    public static String getLastResultId(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(PREF_LAST_RESULT_ID, null);
+    }
+    public static void setLastResultId(Context context, String lastResultId) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(PREF_LAST_RESULT_ID, lastResultId)
                 .apply();
     }
 }

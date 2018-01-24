@@ -1,5 +1,6 @@
 package com.chepizhko.photogallery;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -37,6 +38,9 @@ public class PhotoGalleryFragment extends Fragment {
         setHasOptionsMenu(true);
         // вызов execute() для нового экземпляра FetchItemsTask
         updateItems();
+
+        Intent i = PollService.newIntent(getActivity());
+        getActivity().startService(i);
 ////////////////////////// Если не использовать Picasso
 //        // передаём классу ThumbnailDownloader объект Handler, присоединенный к главному потоку
 //        Handler responseHandler = new Handler();
