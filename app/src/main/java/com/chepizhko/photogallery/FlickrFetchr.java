@@ -18,6 +18,21 @@ import java.util.List;
 public class FlickrFetchr {
     private static final String TAG = "FlickrFetcher";
     private static final String API_KEY = "d52b7e32b139061b2443eb37531062fb";
+    // вы сможете использовать уже написанный код разбора JSON независимо от того,
+    // проводите вы поиск или получаете последние фотографии
+    private static final String FETCH_RECENTS_METHOD = "flickr.photos.getRecent";
+    private static final String SEARCH_METHOD = "flickr.photos.search";
+    private static final Uri ENDPOINT = Uri
+            .parse("https://api.flickr.com/services/rest/")
+            .buildUpon()
+            // Метод Uri.Builder.appendQueryParameter(String,String) автоматически кодирует строки запросов
+            .appendQueryParameter("api_key", API_KEY)
+            .appendQueryParameter("format", "json")
+            .appendQueryParameter("nojsoncallback", "1")
+            // Значение url_s приказывает Flickr включить URL-адрес для уменьшенной версии изображения, если оно доступно
+            .appendQueryParameter("extras", "url_s")
+            .build();
+
     // Метод getUrlBytes(String) получает низкоуровневые данные по URL и возвращает их в виде массива байтов
     public byte[] getUrlBytes(String urlSpec) throws IOException {
         // Этот код создает объект URL на базе строки адреса например www. google.com
@@ -51,24 +66,34 @@ public class FlickrFetchr {
     public String getUrlString(String urlSpec) throws IOException {
         return new String(getUrlBytes(urlSpec));
     }
-    // Метод, который строит соответствующий URL-адрес запроса и загружает его содержимое
-    public List<GalleryItem> fetchItems() {
+    // методы, инициирующие загрузку: они строят URL и вызывают downloadGalleryItems(String).
+    public List<GalleryItem> fetchRecentPhotos() {
+        String url = buildUrl(FETCH_RECENTS_METHOD, null);
+        return downloadGalleryItems(url);
+    }
+    // методы, инициирующие загрузку: они строят URL и вызывают downloadGalleryItems(String).
+    public List<GalleryItem> searchPhotos(String query) {
+        String url = buildUrl(SEARCH_METHOD, query);
+        return downloadGalleryItems(url);
+    }
+    // метод downloadGalleryItems(String) получает URL-адрес и загружает его содержимое
+    private List<GalleryItem> downloadGalleryItems(String url) {
         List<GalleryItem> items = new ArrayList<>();
         try {
-            // класс Uri.Builder для построения полного URL-адреса для API-запроса к Flickr.
-            // Uri.Builder — вспомогательный класс для создания параметризованных URL-адресов
-            // с правильным кодированием символов
-            // https://api.flickr.com/services/rest/?method=flickr.photos.getRecent&api_key=xxx&format=json&nojsoncallback=1&extras=url_s
-            String url = Uri.parse("https://api.flickr.com/services/rest/")
-                    .buildUpon()
-                    // Метод Uri.Builder.appendQueryParameter(String,String) автоматически кодирует строки запросов
-                    .appendQueryParameter("method", "flickr.photos.getRecent")
-                    .appendQueryParameter("api_key", API_KEY)
-                    .appendQueryParameter("format", "json")
-                    .appendQueryParameter("nojsoncallback", "1")
-                    // Значение url_s приказывает Flickr включить URL-адрес для уменьшенной версии изображения, если оно доступно
-                    .appendQueryParameter("extras", "url_s")
-                    .build().toString();
+//            // класс Uri.Builder для построения полного URL-адреса для API-запроса к Flickr.
+//            // Uri.Builder — вспомогательный класс для создания параметризованных URL-адресов
+//            // с правильным кодированием символов
+//            // https://api.flickr.com/services/rest/?method=flickr.photos.getRecent&api_key=xxx&format=json&nojsoncallback=1&extras=url_s
+//            String url = Uri.parse("https://api.flickr.com/services/rest/")
+//                    .buildUpon()
+//                    // Метод Uri.Builder.appendQueryParameter(String,String) автоматически кодирует строки запросов
+//                    .appendQueryParameter("method", "flickr.photos.getRecent")
+//                    .appendQueryParameter("api_key", API_KEY)
+//                    .appendQueryParameter("format", "json")
+//                    .appendQueryParameter("nojsoncallback", "1")
+//                    // Значение url_s приказывает Flickr включить URL-адрес для уменьшенной версии изображения, если оно доступно
+//                    .appendQueryParameter("extras", "url_s")
+//                    .build().toString();
             // получаем JSON из запроса по URL-адресу
             String jsonString = getUrlString(url);
             Log.i(TAG, "Received JSON: " + jsonString);
@@ -83,6 +108,15 @@ public class FlickrFetchr {
             Log.e(TAG, "Failed to parse JSON", je);
         }
         return items;
+    }
+    // метод для построения URL-адреса по значениям метода и запроса
+    private String buildUrl(String method, String query) {
+        Uri.Builder uriBuilder = ENDPOINT.buildUpon()
+                .appendQueryParameter("method", method);
+        if (method.equals(SEARCH_METHOD)) {
+            uriBuilder.appendQueryParameter("text", query);
+        }
+        return uriBuilder.build().toString();
     }
     // метод для извлечения информации каждой фотографии и добавления её в список.
     // Создайте для каждой фотографии объект GalleryItem и добавьте его в список
