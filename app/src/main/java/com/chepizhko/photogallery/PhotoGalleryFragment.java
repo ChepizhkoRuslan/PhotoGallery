@@ -1,6 +1,5 @@
 package com.chepizhko.photogallery;
 
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -39,8 +38,7 @@ public class PhotoGalleryFragment extends Fragment {
         // вызов execute() для нового экземпляра FetchItemsTask
         updateItems();
 
-        Intent i = PollService.newIntent(getActivity());
-        getActivity().startService(i);
+
 ////////////////////////// Если не использовать Picasso
 //        // передаём классу ThumbnailDownloader объект Handler, присоединенный к главному потоку
 //        Handler responseHandler = new Handler();
@@ -122,6 +120,14 @@ public class PhotoGalleryFragment extends Fragment {
                 searchView.setQuery(query, false);
             }
         });
+        // проверьте, что сигнал активен, и измените текст menu_item_toggle_polling,
+        // чтобы приложение выводило надпись, соответствующую текущему состоянию
+        MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
+        if (PollService.isServiceAlarmOn(getActivity())) {
+            toggleItem.setTitle(R.string.stop_polling);
+        } else {
+            toggleItem.setTitle(R.string.start_polling);
+        }
     }
     // Каждый раз, когда пользователь выбирает элемент Clear Search в дополнительном меню,
     // стирайте сохраненный запрос (присваиванием ему null).
@@ -131,6 +137,12 @@ public class PhotoGalleryFragment extends Fragment {
             case R.id.menu_item_clear:
                 QueryPreferences.setStoredQuery(getActivity(), null);
                 updateItems();
+                return true;
+            case R.id.menu_item_toggle_polling:
+                boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
+                PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+                // обновить меню на панели инструментов
+                getActivity().invalidateOptionsMenu();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
