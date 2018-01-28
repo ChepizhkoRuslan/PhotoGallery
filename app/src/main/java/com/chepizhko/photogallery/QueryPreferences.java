@@ -8,6 +8,8 @@ public class QueryPreferences {
     private static final String PREF_SEARCH_QUERY = "searchQuery";
     // Константа для хранения идентификатора последней загруженной фотографии
     private static final String PREF_LAST_RESULT_ID = "lastResultId";
+    // сигнал находиться во включенном или в отключенном состоянии
+    private static final String PREF_IS_ALARM_ON = "isAlarmOn";
     // Метод getStoredQuery(Context) возвращает значение запроса
     // класс QueryPreferences не имеет собственного контекста,
     // вызывающий компонент должен передать свой контекст как входной параметр
@@ -36,6 +38,17 @@ public class QueryPreferences {
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putString(PREF_LAST_RESULT_ID, lastResultId)
+                .apply();
+    }
+
+    public static boolean isAlarmOn(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(PREF_IS_ALARM_ON, false);
+    }
+    public static void setAlarmOn(Context context, boolean isOn) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(PREF_IS_ALARM_ON, isOn)
                 .apply();
     }
 }

@@ -1,5 +1,6 @@
 package com.chepizhko.photogallery;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;
@@ -10,7 +11,6 @@ import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import java.util.List;
@@ -22,6 +22,13 @@ public class PollService extends IntentService {
     private static final String TAG = "PollService";
     // 60 секунд
     private static final long POLL_INTERVAL_MS = TimeUnit.MINUTES.toMillis(1);
+    // широковещательная рассылка будет применяться к определенному нами действию
+    public static final String ACTION_SHOW_NOTIFICATION = "com.chepizhko.photogallery.SHOW_NOTIFICATION";
+    // Чтобы использовать разрешение, определите соответствующую константу в коде и передайте ее при вызове sendBroadcast(…).
+    public static final String PERM_PRIVATE = "com.chepizhko.photogallery.PRIVATE";
+
+    public static final String REQUEST_CODE = "REQUEST_CODE";
+    public static final String NOTIFICATION = "NOTIFICATION";
 
     public static Intent newIntent(Context context) {
         return new Intent(context, PollService.class);
@@ -53,6 +60,8 @@ public class PollService extends IntentService {
             // Обычно при этом также следует отменить и PendingIntent
             pi.cancel();
         }
+        // запись общей настройки сигнала
+        QueryPreferences.setAlarmOn(context, isOn);
     }
     // метод isServiceAlarmOn(Context), использующий флаг PendingIntent.FLAG_NO_CREATE для проверки сигнала
     public static boolean isServiceAlarmOn(Context context) {
@@ -125,18 +134,35 @@ public class PollService extends IntentService {
                     // оповещение при нажатии также будет удаляться с выдвижной панели оповещений.
                     .setAutoCancel(true)
                     .build();
-            // После того как объект Notification будет создан,
-            // его можно отправить вызовом метода notify(int, Notification)
-            // для системной службы NotificationManager
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-            // Передаваемый целочисленный параметр содержит идентификатор оповещения, уникальный в границах приложения.
-            // Если вы отправите второе оповещение с тем же идентификатором, оно заменит последнее оповещение, с тем же id
-            // Так реализуются индикаторы прогресса и другие динамические визуальные эффекты
-            notificationManager.notify(0, notification);
+
+//            // После того как объект Notification будет создан,
+//            // его можно отправить вызовом метода notify(int, Notification)
+//            // для системной службы NotificationManager
+//            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+//            // Передаваемый целочисленный параметр содержит идентификатор оповещения, уникальный в границах приложения.
+//            // Если вы отправите второе оповещение с тем же идентификатором, оно заменит последнее оповещение, с тем же id
+//            // Так реализуются индикаторы прогресса и другие динамические визуальные эффекты
+//            notificationManager.notify(0, notification);
+//
+//            // Теперь приложение будет отправлять широковещательный интент при каждом появлении новых результатов поиска.
+//            sendBroadcast(new Intent(ACTION_SHOW_NOTIFICATION), PERM_PRIVATE);
+
+            // ИЗМЕНИМ чтобы он вызывал ваш новый метод и отправлял упорядоченный широковещательный интент,
+            // вместо того чтобы отправлять оповещение непосредственно NotificationManager.
+            showBackgroundNotification(0, notification);
         }
 
         QueryPreferences.setLastResultId(this, resultId);
     }
+    // Этот метод будет упаковывать обращение к Notification и отправлять его в широковещательном режиме.
+    private void showBackgroundNotification(int requestCode, Notification notification) {
+        Intent i = new Intent(ACTION_SHOW_NOTIFICATION);
+        i.putExtra(REQUEST_CODE, requestCode);
+        i.putExtra(NOTIFICATION, notification);
+        sendOrderedBroadcast(i, PERM_PRIVATE, null, null,
+                Activity.RESULT_OK, null, null);
+    }
+
     // необходимо при помощи объекта ConnectivityManager убедиться в том, что сеть доступна
     // и есть разрешение на фоновые операции
     private boolean isNetworkAvailableAndConnected() {
