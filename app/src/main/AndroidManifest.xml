@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
           package="com.chepizhko.photogallery">
-    <!--Добавление закрытого разрешения-->
-    <permission android:name="com.chepizhko.photogallery.PRIVATE"
-                android:protectionLevel="signature" />
 
-    <uses-permission android:name="com.chepizhko.photogallery.PRIVATE" />
+    <!-- Добавление закрытого разрешения -->
+    <permission
+        android:name="com.chepizhko.photogallery.PRIVATE"
+        android:protectionLevel="signature"/>
+
+    <uses-permission android:name="com.chepizhko.photogallery.PRIVATE"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
         android:allowBackup="true"
@@ -25,20 +28,25 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".PollService">
+        <service android:name=".PollService">
         </service>
+
         <receiver android:name=".StartupReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
-        <receiver android:name=".NotificationReceiver"
-                  android:exported="false">
+        <receiver
+            android:name=".NotificationReceiver"
+            android:exported="false">
             <intent-filter android:priority="-999">
-                <action android:name="com.chepizhko.photogallery.SHOW_NOTIFICATION" />
+                <action android:name="com.chepizhko.photogallery.SHOW_NOTIFICATION"/>
             </intent-filter>
         </receiver>
+
+        <activity android:name=".PhotoPageActivity"
+                  android:configChanges="keyboardHidden|orientation|screenSize">
+        </activity>
     </application>
 
 </manifest>

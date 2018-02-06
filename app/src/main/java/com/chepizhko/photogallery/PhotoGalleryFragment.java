@@ -1,5 +1,6 @@
 package com.chepizhko.photogallery;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -164,13 +165,16 @@ public class PhotoGalleryFragment extends VisibleFragment {
         }
     }
 
-    private class PhotoHolder extends RecyclerView.ViewHolder {
+    private class PhotoHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         // private TextView mTitleTextView;
         ImageView mItemImageView;
+        private GalleryItem mGalleryItem;
+
         public PhotoHolder(View itemView) {
             super(itemView);
            // mTitleTextView = (TextView) itemView;
             mItemImageView = (ImageView) itemView.findViewById(R.id.item_image_view);
+            itemView.setOnClickListener(this);
         }
         ////////////////////////// Если не использовать Picasso
         //        public void bindGalleryItem(GalleryItem item) {
@@ -182,12 +186,22 @@ public class PhotoGalleryFragment extends VisibleFragment {
 //        }
         /////////////////////////////////Picasso
         public void bindGalleryItem(GalleryItem galleryItem) {
+            mGalleryItem = galleryItem;
             Picasso.with(getActivity())
                     .load(galleryItem.getUrl())
                     .placeholder(R.drawable.bill_up_close)
                     .into(mItemImageView);
         }
         ///////////////////////////////////////////////
+
+        @Override
+        public void onClick(View v) {
+            // запуск баузера
+            //Intent i = new Intent(Intent.ACTION_VIEW, mGalleryItem.getPhotoPageUri());
+            // запуск WebView
+            Intent i = PhotoPageActivity.newIntent(getActivity(), mGalleryItem.getPhotoPageUri());
+            startActivity(i);
+        }
     }
 
     // класс RecyclerView.Adapter, который будет предоставлять необходимые объекты PhotoHolder на основании списка GalleryItem

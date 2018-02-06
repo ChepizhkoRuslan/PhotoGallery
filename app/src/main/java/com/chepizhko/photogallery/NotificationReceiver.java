@@ -19,10 +19,8 @@ public class NotificationReceiver extends BroadcastReceiver {
         }
         // если ативности не видно notification отправляется
         int requestCode = i.getIntExtra(PollService.REQUEST_CODE, 0);
-        Notification notification = (Notification)
-                i.getParcelableExtra(PollService.NOTIFICATION);
-        NotificationManagerCompat notificationManager =
-                NotificationManagerCompat.from(c);
+        Notification notification = (Notification) i.getParcelableExtra(PollService.NOTIFICATION);
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(c);
         notificationManager.notify(requestCode, notification);
     }
 }
